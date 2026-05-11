@@ -44,20 +44,20 @@ class UserAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
-            return new RedirectResponse($targetPath);
-        }
-        
         $roles = $token->getRoleNames();
-        
+
         // Check for ROLE_ADMIN first (highest privilege)
-        if (in_array('ROLE_ADMIN', $roles)) {
+        if (in_array('ROLE_ADMIN', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('admin_livres'));
         }
-        
+
         // Check for ROLE_ETUDIANT
-        if (in_array('ROLE_ETUDIANT', $roles)) {
+        if (in_array('ROLE_ETUDIANT', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_etudiant_index'));
+        }
+
+        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
+            return new RedirectResponse($targetPath);
         }
 
         // Default fallback for users with only ROLE_USER
