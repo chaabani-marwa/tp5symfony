@@ -142,6 +142,40 @@ final class LivresController extends AbstractController
         ]);
     }
 
+    #[Route('/panier/valider', name: 'app_cart_checkout', methods: ['GET', 'POST'])]
+    public function checkout(Request $request, CartService $cartService): Response
+    {
+        $cart = $cartService->getCart();
+        $total = $cartService->getCartTotal();
+        $error = null;
+        $success = false;
+        $paymentCode = $request->request->get('payment_code', '');
+
+        if ($request->isMethod('POST')) {
+            if (empty($cart)) {
+                $this->addFlash('warning', 'Votre panier est vide, impossible de valider la commande.');
+
+                return $this->redirectToRoute('app_livres_catalogue');
+            }
+
+            if ($paymentCode !== 'SIMULATE123') {
+                $error = 'Code de paiement invalide. Utilisez le code de test SIMULATE123.';
+            } else {
+                $cartService->clearCart();
+                $success = true;
+                $this->addFlash('success', 'Commande validée avec succès. Paiement simulé accepté.');
+            }
+        }
+
+        return $this->render('cart/checkout.html.twig', [
+            'cart' => $cart,
+            'total' => $total,
+            'error' => $error,
+            'success' => $success,
+            'paymentCode' => $paymentCode,
+        ]);
+    }
+
     #[Route('/panier/retirer/{id}', name: 'app_cart_remove')]
     public function removeFromCart(int $id, CartService $cartService): Response
     {

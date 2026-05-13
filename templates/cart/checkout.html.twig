@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation de commande{% endblock %}
+
+{% block body %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">Validation de la commande</h1>
+    </div>
+</div>
+
+{% if success %}
+    <div class="alert alert-success">
+        Votre commande a été validée avec succès. Le paiement simulé a été accepté.
+    </div>
+    <a href="{{ path('app_livres_catalogue') }}" class="btn btn-primary">Retour au catalogue</a>
+{% else %}
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Récapitulatif du panier</h5>
+            {% if cart is empty %}
+                <div class="alert alert-info">Votre panier est vide.</div>
+            {% else %}
+                <ul class="list-group mb-3">
+                    {% for livreId, item in cart %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ item.titre }} × {{ item.quantity }}</span>
+                            <span>{{ (item.prix * item.quantity)|number_format(2, '.', '') }} DT</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Total</strong>
+                    <strong>{{ total }} DT</strong>
+                </div>
+            {% endif %}
+
+            <form method="post" class="row g-3">
+                <div class="col-12">
+                    <label for="payment_code" class="form-label">Code de paiement de test</label>
+                    <input type="text" id="payment_code" name="payment_code" value="{{ paymentCode }}" class="form-control" placeholder="SIMULATE123" required>
+                    <div class="form-text">Entrez le code de test <strong>SIMULATE123</strong> pour simuler le paiement.</div>
+                </div>
+                <div class="col-12 d-flex justify-content-between">
+                    <a href="{{ path('app_cart_view') }}" class="btn btn-secondary">Retour au panier</a>
+                    <button type="submit" class="btn btn-success">Valider le paiement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

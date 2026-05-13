@@ -68,7 +68,7 @@
                     </div>
                     <h4 class="text-primary">Total : {{ total }} DT</h4>
                     <hr>
-                    <button class="btn btn-primary w-100 mb-2" disabled>Procéder au paiement</button>
+                    <a href="{{ path('app_cart_checkout') }}" class="btn btn-success w-100 mb-2">Valider la commande</a>
                     <a href="{{ path('app_cart_clear') }}" class="btn btn-outline-danger w-100" onclick="return confirm('Êtes-vous sûr de vouloir vider le panier ?')">Vider le panier</a>
                 </div>
             </div>
