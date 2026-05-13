@@ -5,7 +5,7 @@
 {% block body %}
 <h1>Liste des Catégoies</h1>
     <div class="d-flex justify-content-end">
-    <a href="#" class="btn btn-primary">Ajouter une catégorie</a>
+    <a href="{{ path('admin_categories_create') }}" class="btn btn-primary">Ajouter une catégorie</a>
     </div>
     <ul>
         {% for cat in categories  %}

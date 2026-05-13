@@ -20,18 +20,27 @@ final class LivresController extends AbstractController
     {
         $em->remove($livre);
         $em->flush();
-        dd($livre);
+        //dd($livre);
+                    return $this->redirectToRoute('admin_livres');
+
     }
-    #[Route('/admin/livres/update/{id}', name: 'app_livres_update')]
-    public function update(Livres $livre,EntityManagerInterface $em): Response
-    { //$livre = $rep->find($id);
-        $nouveauPrix=$livre->getPrix()*1.1;
-        $livre->setPrix($nouveauPrix);
-        $em->persist($livre);
+    #[Route('/admin/livres/update/{id}', name: 'app_livres_update', methods: ['GET', 'POST'])]
+    public function update(Request $request, Livres $livre, EntityManagerInterface $em): Response
+    {
+        $form = $this->createForm(LivresType::class, $livre);
+        $form->handleRequest($request);
 
-        $em->flush();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+            $this->addFlash('success', 'Le livre a été mis à jour.');
 
-        dd($livre);
+            return $this->redirectToRoute('admin_livres');
+        }
+
+        return $this->render('livres/edit.html.twig', [
+            'f' => $form,
+            'livre' => $livre,
+        ]);
     }
     #[Route('/admin/livres', name: 'admin_livres')]
     public function all(LivresRepository $rep,PaginatorInterface $paginator, Request $request): Response
