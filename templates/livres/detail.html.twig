@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ livre.titre }}{% endblock %}
+
+{% block body %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <a href="{{ path('app_livres_catalogue') }}" class="btn btn-secondary btn-sm">← Retour au catalogue</a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <img src="{{ livre.image }}" alt="{{ livre.titre }}" class="img-fluid rounded">
+            </div>
+            <div class="col-md-8">
+                <h1 class="card-title">{{ livre.titre }}</h1>
+                
+                <div class="mb-3">
+                    <h5 class="text-muted">{{ livre.editeur }}</h5>
+                </div>
+
+                <div class="mb-3">
+                    <p>
+                        <strong>Prix :</strong> <span class="h4 text-primary">{{ livre.prix }} DT</span>
+                    </p>
+                    <p>
+                        <strong>Catégorie :</strong> 
+                        <span class="badge bg-info">{{ livre.categorie.libelle }}</span>
+                    </p>
+                    <p>
+                        <strong>ISBN :</strong> {{ livre.isbn }}
+                    </p>
+                    <p>
+                        <strong>Date d'édition :</strong> {{ livre.dateEdition|date('d-m-Y') }}
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <h5>Résumé</h5>
+                    <p class="text-justify">{{ livre.resume }}</p>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ path('app_cart_add', {'id': livre.id}) }}" class="btn btn-success btn-lg me-2">
+                        🛒 Ajouter au panier
+                    </a>
+                    <a href="{{ path('app_livres_catalogue') }}" class="btn btn-secondary">Retour au catalogue</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

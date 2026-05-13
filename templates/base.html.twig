@@ -22,9 +22,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_livres_catalogue') }}">Catalogue</a>
+                    </li>
                     {% if app.user and 'ROLE_ADMIN' in app.user.roles %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ path('admin_livres') }}">Livres</a>
+                            <a class="nav-link" href="{{ path('admin_livres') }}">Livres (Admin)</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ path('admin_categories') }}">Catégories</a>
@@ -34,6 +37,11 @@
                             <a class="nav-link" href="{{ path('app_etudiant_index') }}">Étudiants</a>
                         </li>
                     {% endif %}
+                    <li class="nav-item ms-3">
+                        <a class="nav-link" href="{{ path('app_cart_view') }}">
+                            🛒 Panier
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     {% if app.user %}

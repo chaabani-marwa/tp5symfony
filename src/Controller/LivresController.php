@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Livres;
 use App\Form\LivresType;
 use App\Repository\LivresRepository;
+use App\Service\CartService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,6 +16,28 @@ use function PHPUnit\Framework\throwException;
 
 final class LivresController extends AbstractController
 {
+    #[Route('/catalogue', name: 'app_livres_catalogue')]
+    public function catalogue(LivresRepository $rep, PaginatorInterface $paginator, Request $request): Response
+    {
+        $livres = $paginator->paginate(
+            $rep->findAll(),
+            $request->query->getInt('page', 1),
+            10
+        );
+
+        return $this->render('livres/catalogue.html.twig', ['livres' => $livres]);
+    }
+
+    #[Route('/livre/{id}', name: 'app_livres_detail')]
+    public function detail(Livres $livre): Response
+    {
+        if (!$livre) {
+            throw $this->createNotFoundException('Livre non trouvé');
+        }
+
+        return $this->render('livres/detail.html.twig', ['livre' => $livre]);
+    }
+
     #[Route('/admin/livres/delete/{id}', name: 'app_livres_delete')]
     public function delete(Livres $livre,EntityManagerInterface $em): Response
     {
@@ -96,5 +119,44 @@ final class LivresController extends AbstractController
         return $this->render('livres/create.html.twig', [
             'f' => $form,
         ]);
+    }
+
+    #[Route('/panier/ajouter/{id}', name: 'app_cart_add')]
+    public function addToCart(Livres $livre, CartService $cartService): Response
+    {
+        $cartService->addToCart($livre);
+        $this->addFlash('success', $livre->getTitre() . ' a été ajouté au panier.');
+
+        return $this->redirectToRoute('app_livres_detail', ['id' => $livre->getId()]);
+    }
+
+    #[Route('/panier', name: 'app_cart_view')]
+    public function viewCart(CartService $cartService): Response
+    {
+        $cart = $cartService->getCart();
+        $total = $cartService->getCartTotal();
+
+        return $this->render('cart/index.html.twig', [
+            'cart' => $cart,
+            'total' => $total,
+        ]);
+    }
+
+    #[Route('/panier/retirer/{id}', name: 'app_cart_remove')]
+    public function removeFromCart(int $id, CartService $cartService): Response
+    {
+        $cartService->removeFromCart($id);
+        $this->addFlash('info', 'Le livre a été retiré du panier.');
+
+        return $this->redirectToRoute('app_cart_view');
+    }
+
+    #[Route('/panier/vider', name: 'app_cart_clear')]
+    public function clearCart(CartService $cartService): Response
+    {
+        $cartService->clearCart();
+        $this->addFlash('info', 'Le panier a été vidé.');
+
+        return $this->redirectToRoute('app_livres_catalogue');
     }
 }
