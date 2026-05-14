@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique des Commandes{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Historique des Commandes</h1>
+
+            {% if commandes is empty %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Vous n'avez encore passé aucune commande.
+                </div>
+            {% else %}
+                <div class="row">
+                    {% for commande in commandes %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        Commande #{{ commande.id }}
+                                    </h5>
+                                    <small class="text-muted">
+                                        {{ commande.dateCommande|date('d/m/Y H:i') }}
+                                    </small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Statut:</strong>
+                                        {% if commande.status == 'En cours' %}
+                                            <span class="badge bg-warning">En cours</span>
+                                        {% elseif commande.status == 'Expédiée' %}
+                                            <span class="badge bg-info">Expédiée</span>
+                                        {% elseif commande.status == 'Livrée' %}
+                                            <span class="badge bg-success">Livrée</span>
+                                        {% elseif commande.status == 'Annulée' %}
+                                            <span class="badge bg-danger">Annulée</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ commande.status }}</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Livres commandés:</strong>
+                                        <ul class="list-unstyled">
+                                            {% for livre in commande.livres %}
+                                                <li class="mb-2">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>{{ livre.titre }}</span>
+                                                        <span class="text-muted">{{ livre.prix }}€</span>
+                                                    </div>
+                                                    <small class="text-muted">Quantité: {{ livre.quantity }}</small>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+
+                                    <div class="border-top pt-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>Total:</strong>
+                                            <span class="h5 text-primary mb-0">{{ commande.prixTotal }}€</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{{ path('app_livres_catalogue') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Retour au catalogue
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

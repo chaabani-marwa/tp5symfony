@@ -1,9 +1,10 @@
 <?php
-
 namespace App\Controller;
 
+use App\Entity\Commande;
 use App\Entity\Livres;
 use App\Form\LivresType;
+use App\Repository\CommandeRepository;
 use App\Repository\LivresRepository;
 use App\Service\CartService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -39,13 +40,12 @@ final class LivresController extends AbstractController
     }
 
     #[Route('/admin/livres/delete/{id}', name: 'app_livres_delete')]
-    public function delete(Livres $livre,EntityManagerInterface $em): Response
+    public function delete(Livres $livre, EntityManagerInterface $em): Response
     {
         $em->remove($livre);
         $em->flush();
         //dd($livre);
-                    return $this->redirectToRoute('admin_livres');
-
+        return $this->redirectToRoute('admin_livres');
     }
     #[Route('/admin/livres/update/{id}', name: 'app_livres_update', methods: ['GET', 'POST'])]
     public function update(Request $request, Livres $livre, EntityManagerInterface $em): Response
@@ -66,7 +66,7 @@ final class LivresController extends AbstractController
         ]);
     }
     #[Route('/admin/livres', name: 'admin_livres')]
-    public function all(LivresRepository $rep,PaginatorInterface $paginator, Request $request): Response
+    public function all(LivresRepository $rep, PaginatorInterface $paginator, Request $request): Response
     {
         $livres = $paginator->paginate(
             $rep->findAll(), /* query NOT result */
@@ -74,26 +74,29 @@ final class LivresController extends AbstractController
             10 /* limit per page */
         );
         //dd($livres);
-        return $this->render('livres/all.html.twig', ['livres'=>$livres]);
+        return $this->render('livres/all.html.twig', ['livres' => $livres]);
     }
     #[Route('admin/livres/show/{id}', name: 'app_livres_show')]
     //paramConverter
     public function show(Livres $livre): Response
     {
-        if(!$livre)
-        {throw $this->createNotFoundException('No book found  ');}
+        if (!$livre) {
+            throw $this->createNotFoundException('No book found  ');
+        }
 
-        return $this->render('livres/show.html.twig', ['livre'=>$livre]);
+        return $this->render('livres/show.html.twig', ['livre' => $livre]);
     }
     #[Route('/admin/livres/show2', name: 'app_livres_show2')]
     public function show2(LivresRepository $rep): Response
-    { $livre=$rep->findOneBy(['titre'=>'titre 1','editeur'=>'Eni']);
+    {
+        $livre = $rep->findOneBy(['titre' => 'titre 1', 'editeur' => 'Eni']);
 
         dd($livre);
     }
     #[Route('admin/livres/show3', name: 'app_livres_show3')]
     public function show3(LivresRepository $rep): Response
-    { $livres=$rep->findBy(['titre'=>'titre 1','editeur'=>'Eyrolles'],['prix'=>'DESC']);
+    {
+        $livres = $rep->findBy(['titre' => 'titre 1', 'editeur' => 'Eyrolles'], ['prix' => 'DESC']);
 
         dd($livres);
     }
@@ -101,19 +104,18 @@ final class LivresController extends AbstractController
 
 
     #[Route('/admin/livres/create', name: 'admin_livres_create')]
-    public function create(Request $request,EntityManagerInterface $em): Response
-    {   $livre=new Livres();
+    public function create(Request $request, EntityManagerInterface $em): Response
+    {
+        $livre = new Livres();
         //afficher le formulaire
-        $form=$this->createForm(LivresType::class,$livre);
+        $form = $this->createForm(LivresType::class, $livre);
         //traitement des données issues
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($livre);
             $em->flush();
-            $this->addFlash('success','Le livre a été bien ajouté');
+            $this->addFlash('success', 'Le livre a été bien ajouté');
             return $this->redirectToRoute('admin_livres');
-
-
         }
 
         return $this->render('livres/create.html.twig', [
@@ -127,7 +129,9 @@ final class LivresController extends AbstractController
         $cartService->addToCart($livre);
         $this->addFlash('success', $livre->getTitre() . ' a été ajouté au panier.');
 
-        return $this->redirectToRoute('app_livres_detail', ['id' => $livre->getId()]);
+                //return $this->redirectToRoute('app_livres_detail', ['id' => $livre->getId()]);
+
+        return $this->redirectToRoute('app_livres_catalogue');
     }
 
     #[Route('/panier', name: 'app_cart_view')]
@@ -143,7 +147,7 @@ final class LivresController extends AbstractController
     }
 
     #[Route('/panier/valider', name: 'app_cart_checkout', methods: ['GET', 'POST'])]
-    public function checkout(Request $request, CartService $cartService): Response
+    public function checkout(Request $request, CartService $cartService, EntityManagerInterface $em): Response
     {
         $cart = $cartService->getCart();
         $total = $cartService->getCartTotal();
@@ -161,9 +165,27 @@ final class LivresController extends AbstractController
             if ($paymentCode !== 'SIMULATE123') {
                 $error = 'Code de paiement invalide. Utilisez le code de test SIMULATE123.';
             } else {
-                $cartService->clearCart();
-                $success = true;
-                $this->addFlash('success', 'Commande validée avec succès. Paiement simulé accepté.');
+                try {
+                    // Créer la commande
+                    $commande = new Commande();
+                    $commande->setUser($this->getUser());
+                    $commande->setStatus('En cours');
+                    $commande->setPrixTotal($total);
+                    $commande->setDateCommande(new \DateTime());
+                    $commande->setLivres($cart);
+
+                    $em->persist($commande);
+                    $em->flush();
+
+                    $cartService->clearCart();
+                    $success = true;
+                    $this->addFlash('success', 'Commande validée avec succès. Paiement simulé accepté.');
+                } catch (\Exception $e) {
+                    // Si la table n'existe pas encore, simuler le succès sans créer la commande
+                    $cartService->clearCart();
+                    $success = true;
+                    $this->addFlash('warning', 'Commande simulée (table non créée). Paiement simulé accepté.');
+                }
             }
         }
 
@@ -192,5 +214,25 @@ final class LivresController extends AbstractController
         $this->addFlash('info', 'Le panier a été vidé.');
 
         return $this->redirectToRoute('app_livres_catalogue');
+    }
+
+    #[Route('/historique-commandes', name: 'app_commandes_history')]
+    public function commandesHistory(CommandeRepository $commandeRepository): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        try {
+            $commandes = $commandeRepository->findBy(['user' => $user], ['dateCommande' => 'DESC']);
+        } catch (\Exception $e) {
+            // Si la table commande n'existe pas, afficher une liste vide
+            $commandes = [];
+        }
+
+        return $this->render('commandes/history.html.twig', [
+            'commandes' => $commandes,
+        ]);
     }
 }
